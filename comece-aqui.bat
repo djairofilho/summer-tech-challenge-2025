@@ -4,11 +4,11 @@ color 0A
 
 :: Protecao para execucao duplicada
 if exist "nestjs-template-guia.md" (
-    set ALREADY_RAN=0
-) else if exist "express-template-guia.md" (
-    set ALREADY_RAN=0
-) else (
     set ALREADY_RAN=1
+) else if exist "express-template-guia.md" (
+    set ALREADY_RAN=1
+) else (
+    set ALREADY_RAN=0
 )
 
 if "%ALREADY_RAN%"=="1" (

@@ -2,7 +2,7 @@
 set -e
 
 # Protecao contra execucao duplicada
-if [ ! -f "nestjs-template-guia.md" ] && [ ! -f "express-template-guia.md" ]; then
+if [ -f "nestjs-template-guia.md" ] || [ -f "express-template-guia.md" ]; then
   echo "O script ja foi executado anteriormente."
   echo "Para executar novamente, restaure os templates originais antes com git restore ."
   exit 1
