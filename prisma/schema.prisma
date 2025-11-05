@@ -10,3 +10,21 @@ datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
+
+model Receiver {
+  id         Int         @id @default(autoincrement())
+  name       String
+  balance    Float       @default(0)
+  operations Operation[]
+}
+
+model Operation {
+  id         Int      @id @default(autoincrement())
+  receiver   Receiver @relation(fields: [receiverId], references: [id])
+  receiverId Int
+  grossValue Float
+  fee        Float
+  netValue   Float
+  status     String   @default("pending")
+  createdAt  DateTime @default(now())
+}

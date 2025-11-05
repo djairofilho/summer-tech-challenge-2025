@@ -67,3 +67,9 @@ typings/
 /dist
 /generated/prisma
 /build
+
+# Local SQLite database files
+dev.db
+*.sqlite
+*.db
+*.db-journal
