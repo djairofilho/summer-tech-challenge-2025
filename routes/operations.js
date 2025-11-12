@@ -1,9 +1,7 @@
 var express = require('express');
 var router = express.Router();
 const { operations, receivers } = require('../db');
-
-// Taxa de antecipação (3%)
-const FEE_RATE = 0.03;
+const operationService = require('../services/operationService');
 
 /**
  * POST /operations
@@ -14,37 +12,35 @@ router.post('/', async function(req, res, next) {
   try {
     const { receiver_id, gross_value } = req.body;
 
-    // Validações
-    if (!receiver_id) {
+    // Validar dados de entrada
+    try {
+      operationService.validateOperationInput(receiver_id, gross_value);
+    } catch (validationError) {
       return res.status(400).json({ 
-        error: 'receiver_id é obrigatório' 
+        error: validationError.message 
       });
     }
 
-    if (!gross_value || gross_value <= 0) {
-      return res.status(400).json({ 
-        error: 'gross_value é obrigatório e deve ser maior que zero' 
-      });
-    }
+    // Converter para número
+    const receiverId = parseInt(receiver_id);
+    const grossValue = parseFloat(gross_value);
 
     // Verificar se o recebedor existe
-    const receiver = await receivers.findById(receiver_id);
+    const receiver = await receivers.findById(receiverId);
     if (!receiver) {
       return res.status(404).json({ 
         error: 'Recebedor não encontrado' 
       });
     }
 
-    // Calcular fee (3% do valor bruto)
-    const fee = gross_value * FEE_RATE;
-    
-    // Calcular valor líquido
-    const net_value = gross_value - fee;
+    // Calcular fee e net_value usando o serviço
+    const { fee, netValue } = operationService.calculateOperationValues(grossValue);
+    const net_value = netValue;
 
     // Criar operação
     const operation = await operations.create(
-      receiver_id,
-      gross_value,
+      receiverId,
+      grossValue,
       fee,
       net_value
     );
@@ -108,26 +104,31 @@ router.post('/:id/confirm', async function(req, res, next) {
       });
     }
 
-    // Confirmar operação
-    const operation = await operations.confirm(id);
-
+    // Buscar operação antes de confirmar para validar
+    const operation = await operations.findById(id);
+    
     if (!operation) {
       return res.status(404).json({ 
         error: 'Operação não encontrada' 
       });
     }
 
-    res.json(operation);
-  } catch (error) {
-    console.error('Erro ao confirmar operação:', error);
-    
-    // Tratar erro específico de operação já confirmada
-    if (error.message === 'Operação já está confirmada') {
+    // Validar se a operação pode ser confirmada
+    try {
+      operationService.validateOperationForConfirmation(operation);
+    } catch (validationError) {
       return res.status(400).json({ 
-        error: error.message 
+        error: validationError.message 
       });
     }
 
+    // Confirmar operação
+    const confirmedOperation = await operations.confirm(id);
+
+    res.json(confirmedOperation);
+  } catch (error) {
+    console.error('Erro ao confirmar operação:', error);
+    
     res.status(500).json({ 
       error: 'Erro ao confirmar operação',
       message: error.message 
