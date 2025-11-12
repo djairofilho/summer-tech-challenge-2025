@@ -2,7 +2,8 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
 // Caminho para o arquivo do banco de dados
-const DB_PATH = path.join(__dirname, 'db.sqlite');
+// Em modo de teste, usa banco de teste
+const DB_PATH = process.env.TEST_DB_PATH || path.join(__dirname, 'db_testn.sqlite');
 
 // Variável para armazenar a conexão do banco
 let db;

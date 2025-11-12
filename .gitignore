@@ -67,3 +67,7 @@ typings/
 /dist
 /generated/prisma
 /build
+
+# Banco de dados de teste
+db.test.sqlite
+*.test.sqlite

@@ -6,6 +6,7 @@ var logger = require('morgan');
 require('./db');
 
 var indexRouter = require('./routes/index');
+var operationsRouter = require('./routes/operations');
 
 var app = express();
 
@@ -15,5 +16,6 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 app.use('/', indexRouter);
+app.use('/operations', operationsRouter);
 
 module.exports = app;
