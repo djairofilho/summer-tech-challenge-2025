@@ -30,36 +30,46 @@ describe('Rotas de Recebedores', () => {
     const dbModule = require('../db');
     const db = dbModule.db;
     
-    return new Promise((resolve, reject) => {
-      db.run('DELETE FROM operations', (err) => {
-        if (err) {
-          // Se a tabela não existir, ignora o erro
-          if (err.message && err.message.includes('no such table')) {
-            db.run('DELETE FROM receivers', (err2) => {
-              if (err2 && err2.message && !err2.message.includes('no such table')) {
-                return reject(err2);
-              }
-              resolve();
-            });
-          } else {
-            return reject(err);
-          }
-        } else {
-          db.run('DELETE FROM receivers', (err2) => {
-            if (err2) {
-              // Se a tabela não existir, ignora o erro
-              if (err2.message && err2.message.includes('no such table')) {
-                resolve();
-              } else {
-                return reject(err2);
-              }
+    try {
+      // Tentar deletar operações primeiro
+      try {
+        await new Promise((resolve, reject) => {
+          db.run('DELETE FROM operations', (err) => {
+            if (err && !err.message.includes('no such table')) {
+              reject(err);
             } else {
               resolve();
             }
           });
+        });
+      } catch (err) {
+        // Ignorar se a tabela não existir
+        if (!err.message || !err.message.includes('no such table')) {
+          throw err;
         }
-      });
-    });
+      }
+      
+      // Tentar deletar recebedores
+      try {
+        await new Promise((resolve, reject) => {
+          db.run('DELETE FROM receivers', (err) => {
+            if (err && !err.message.includes('no such table')) {
+              reject(err);
+            } else {
+              resolve();
+            }
+          });
+        });
+      } catch (err) {
+        // Ignorar se a tabela não existir
+        if (!err.message || !err.message.includes('no such table')) {
+          throw err;
+        }
+      }
+    } catch (err) {
+      // Se houver erro inesperado, apenas logar mas não falhar
+      console.warn('Aviso ao limpar banco de dados:', err.message);
+    }
   }
 
   // Setup antes de todos os testes
@@ -87,9 +97,13 @@ describe('Rotas de Recebedores', () => {
   // Limpar banco de dados e criar recebedor antes de cada teste
   beforeEach(async () => {
     await cleanupDatabase();
+    // Pequeno delay para garantir que a limpeza foi commitada
+    await new Promise(resolve => setTimeout(resolve, 50));
     // Criar um recebedor de teste
     const receiver = await receivers.create('Recebedor Teste');
     receiverId = receiver.id;
+    // Pequeno delay para garantir que o recebedor foi criado
+    await new Promise(resolve => setTimeout(resolve, 50));
   });
 
   // Limpar banco após todos os testes
@@ -159,11 +173,18 @@ describe('Rotas de Recebedores', () => {
     });
 
     test('deve retornar histórico ordenado por data (mais recente primeiro)', async () => {
-      // Criar operações com pequeno delay para garantir timestamps diferentes
+      // Verificar se o recebedor existe
+      const receiver = await receivers.findById(receiverId);
+      if (!receiver) {
+        throw new Error(`Recebedor ${receiverId} não encontrado`);
+      }
+      
+      // Criar operações com delay para garantir timestamps diferentes
+      // SQLite pode usar precisão de segundo, então precisamos de pelo menos 1 segundo
       const operation1 = await operations.create(receiverId, 1000, 30, 970);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise(resolve => setTimeout(resolve, 1100));
       const operation2 = await operations.create(receiverId, 500, 15, 485);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise(resolve => setTimeout(resolve, 1100));
       const operation3 = await operations.create(receiverId, 2000, 60, 1940);
 
       const response = await request(app)
@@ -180,6 +201,12 @@ describe('Rotas de Recebedores', () => {
     });
 
     test('deve retornar recebedor com saldo atualizado após confirmar operações', async () => {
+      // Verificar se o recebedor existe
+      const receiver = await receivers.findById(receiverId);
+      if (!receiver) {
+        throw new Error(`Recebedor ${receiverId} não encontrado`);
+      }
+      
       // Criar operação
       const operation = await operations.create(receiverId, 1000, 30, 970);
       

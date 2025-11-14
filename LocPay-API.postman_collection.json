@@ -1,0 +1,473 @@
+{
+	"info": {
+		"_postman_id": "locpay-api-collection",
+		"name": "LocPay Tech Challenge API",
+		"description": "Collection completa da API LocPay Tech Challenge com todos os endpoints para gerenciar operações e recebedores",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "locpay-challenge"
+	},
+	"item": [
+		{
+			"name": "Documentação",
+			"item": [
+				{
+					"name": "GET - Documentação da API",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								""
+							]
+						},
+						"description": "Retorna informações sobre a API e lista de endpoints disponíveis"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Recebedores",
+			"item": [
+				{
+					"name": "POST - Criar Recebedor",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"João Silva\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/receivers",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"receivers"
+							]
+						},
+						"description": "Cria um novo recebedor. O campo 'name' é obrigatório."
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Buscar Recebedor",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/receivers/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"receivers",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "ID do recebedor"
+								}
+							]
+						},
+						"description": "Retorna os dados do recebedor (nome, saldo) e histórico de operações"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Operações",
+			"item": [
+				{
+					"name": "POST - Criar Operação",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"receiver_id\": 1,\n  \"gross_value\": 1000\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/operations",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"operations"
+							]
+						},
+						"description": "Cria uma nova operação de antecipação. A taxa (fee) é calculada automaticamente como 3% do valor bruto. O valor líquido (net_value) é calculado como gross_value - fee. A operação é criada com status 'pending'."
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Buscar Operação",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/operations/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"operations",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "ID da operação"
+								}
+							]
+						},
+						"description": "Retorna os dados completos de uma operação"
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Confirmar Operação",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/operations/:id/confirm",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"operations",
+								":id",
+								"confirm"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "ID da operação a ser confirmada"
+								}
+							]
+						},
+						"description": "Confirma uma operação e atualiza o saldo do recebedor. O status da operação é alterado para 'confirmed' e o valor líquido (net_value) é somado ao saldo atual do recebedor. Não é possível confirmar uma operação que já está confirmada."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Fluxos Completos",
+			"item": [
+				{
+					"name": "Fluxo 1 - Operação Completa",
+					"item": [
+						{
+							"name": "1. Criar Recebedor",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Maria Santos\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/receivers",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"receivers"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "2. Criar Operação",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"receiver_id\": 1,\n  \"gross_value\": 2000\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/operations",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"operations"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "3. Confirmar Operação",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/operations/1/confirm",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"operations",
+										"1",
+										"confirm"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "4. Consultar Recebedor",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/receivers/1",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"receivers",
+										"1"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Fluxo 2 - Múltiplas Operações",
+					"item": [
+						{
+							"name": "1. Criar Recebedor",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Pedro Oliveira\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/receivers",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"receivers"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "2. Criar Operação 1",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"receiver_id\": 1,\n  \"gross_value\": 1000\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/operations",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"operations"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "3. Criar Operação 2",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"receiver_id\": 1,\n  \"gross_value\": 500\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/operations",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"operations"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "4. Criar Operação 3",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"receiver_id\": 1,\n  \"gross_value\": 1500\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/operations",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"operations"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "5. Confirmar Todas as Operações",
+							"item": [
+								{
+									"name": "Confirmar Operação 1",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/operations/1/confirm",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"operations",
+												"1",
+												"confirm"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Confirmar Operação 2",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/operations/2/confirm",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"operations",
+												"2",
+												"confirm"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Confirmar Operação 3",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"url": {
+											"raw": "{{base_url}}/operations/3/confirm",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"operations",
+												"3",
+												"confirm"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "6. Consultar Recebedor",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/receivers/1",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"receivers",
+										"1"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		}
+	]
+}
+
